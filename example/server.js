@@ -13,8 +13,7 @@ async.autoInject({
         varietiesToInclude: ['plain'],
         fetchDirectives: {
           'img-src': 'https:',
-          'report-uri': 'http://localhost:8080/report',
-          'report-to': 'http://localhost:8080/report'
+          'report-uri': 'http://localhost:8080/report'
         }
       }
     }, done);
@@ -29,15 +28,6 @@ async.autoInject({
           <img src='http://localhost:8080/a.jpg'>
           <img src='https://localhost:8080/b.jpg>
         `);
-      }
-    });
-    server.route({
-      path: '/report',
-      method: 'POST',
-      handler: (request, reply) => {
-        console.log('error report recieved: ');
-        console.log(request.payload);
-        reply('');
       }
     });
     done();
