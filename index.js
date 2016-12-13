@@ -36,7 +36,11 @@ exports.register = (server, pluginOptions, next) => {
 
   // calculates and adds the CSP header for each request before it returns
   server.ext('onPreResponse', (request, reply) => {
-    // only worry about it if this response variety is in the indicated list:
+    // don't worry about it if this was called by the CSP report route:
+    if (options.fetchDirectives['report-uri'] === request.path) {
+      return reply.continue();
+    }
+    // don't worry about it if this response variety isn't in the indicated varieties:
     if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
       return reply.continue();
     }
