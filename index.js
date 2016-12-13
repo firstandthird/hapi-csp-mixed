@@ -1,17 +1,17 @@
 const _ = require('lodash');
+const aug = require('aug');
 
 const pluginDefaults = {
   varietiesToInclude: ['view'],
   fetchDirectives: {
     'default-src': ['https:'],
     'report-uri': 'http://localhost/csp_reports'
-  }
+  },
+  headerKey: 'Content-Security-Policy-Report-Only'
 };
 
 exports.register = (server, pluginOptions, next) => {
-  const options = _.defaults(pluginOptions, pluginDefaults);
-  const headerKey = 'Content-Security-Policy-Report-Only';
-
+  const options = aug(pluginDefaults, pluginOptions);
   // policies are single-quoted in CSP headers, urls/etc aren't:
   const quotify = (policy) => {
     if (['none', 'self', 'unsafe-inline', 'unsafe-eval'].indexOf(policy) > -1) {
@@ -22,18 +22,16 @@ exports.register = (server, pluginOptions, next) => {
 
   // stringify the contents of the CSP header
   // eg: default-src https: 'unsafe-inline' 'unsafe-eval'; report-uri https://example.com/reportingEndpoint
-  const getCSPValue = () => {
-    return _.reduce(options.fetchDirectives, (memo, fetchDirectiveValue, fetchDirective) => {
-      // policy could be either a single policy or list of them:
-      if (typeof fetchDirectiveValue === 'string') {
-        memo.push(`${fetchDirective} ${quotify(fetchDirectiveValue)}`);
-      } else {
-        memo.push(`${fetchDirective} ${_.map(fetchDirectiveValue, item => quotify(item)).join(' ')}`);
-      }
-      return memo;
-    }, []).join(';');
-  };
-  const cspValue = getCSPValue();
+  const cspValue = _.reduce(options.fetchDirectives, (memo, fetchDirectiveValue, fetchDirective) => {
+    // policy could be either a single policy or list of them:
+    if (typeof fetchDirectiveValue === 'string') {
+      memo.push(`${fetchDirective} ${quotify(fetchDirectiveValue)}`);
+    } else {
+      memo.push(`${fetchDirective} ${_.map(fetchDirectiveValue, item => quotify(item)).join(' ')}`);
+    }
+    return memo;
+  }, []).join(';');
+
   // calculates and adds the CSP header for each request before it returns
   server.ext('onPreResponse', (request, reply) => {
     // only worry about it if this response variety is in the indicated list:
@@ -42,9 +40,9 @@ exports.register = (server, pluginOptions, next) => {
     }
     const response = request.response;
     if (request.response.isBoom) {
-      response.output.headers[headerKey] = cspValue;
+      response.output.headers[options.headerKey] = cspValue;
     } else {
-      response.header(headerKey, cspValue);
+      response.header(options.headerKey, cspValue);
     }
     reply.continue();
   });
@@ -52,7 +50,7 @@ exports.register = (server, pluginOptions, next) => {
   if (options['report-uri']) {
     const routeOptions = {
       uri: options['report-uri'],
-      method: 'POST',
+      method: 'POST'
     };
     // will need to try this out in browser:
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
