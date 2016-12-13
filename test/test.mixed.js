@@ -156,6 +156,7 @@ lab.test('should provide a route at route-url ', (allDone) => {
       server.inject({
         url: '/report',
         method: 'POST',
+        headers: { 'content-type': 'application/csp-report' }
       }, (injectResponse) => {
         done(null, injectResponse);
       });

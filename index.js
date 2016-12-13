@@ -56,10 +56,17 @@ exports.register = (server, pluginOptions, next) => {
   if (options.fetchDirectives['report-uri']) {
     const routeOptions = {
       path:  url.parse(options.fetchDirectives['report-uri']).pathname,
-      method: 'POST'
+      method: '*',
+      config: {
+        payload: {
+          parse: false,
+          allow: ['application/csp-report']
+        }
+      }
     };
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
-      server.log(options.logTags, request.payload);
+      // the report will be a Buffer representing a JSON string:
+      server.log(options.logTags, request.payload.toString('utf-8'));
       reply();
     };
     server.route(routeOptions);
