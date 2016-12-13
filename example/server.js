@@ -1,3 +1,4 @@
+'use strict';
 const Hapi = require('hapi');
 const hapiCSP = require('../index.js');
 const async = require('async');
@@ -29,7 +30,7 @@ async.autoInject({
       path: '/',
       method: 'GET',
       handler: (request, reply) => {
-        // reply contains a mix of http/https img sources, which is no bueno:
+        // reply contains a mix of http/https img sources, which our header said was no bueno:
         reply(`
           <img src='http://localhost:8080/a.jpg'>
           <img src='https://localhost:8080/b.jpg>
