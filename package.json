@@ -1,6 +1,6 @@
 {
   "name": "hapi-csp-mixed",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "description": "hapi plugin to resolve mixed http & https routes safely",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "url": "git+https://github.com/firstandthird/hapi-csp-mixed.git"
   },
   "keywords": [],
-  "author": "Greg Allen <code@firstandthird.com> (http://firstandthird.com/)",
+  "author": "First+Third <code@firstandthird.com> (http://firstandthird.com/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/firstandthird/hapi-csp-mixed/issues"
