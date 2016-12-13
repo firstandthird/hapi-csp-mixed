@@ -3,6 +3,7 @@ const _ = require('lodash');
 const aug = require('aug');
 const url = require('url');
 const pluginDefaults = {
+  logTags: ['content-security-policy-report'],
   varietiesToInclude: ['view'],
   fetchDirectives: {
     'default-src': ['https:'],
@@ -53,9 +54,8 @@ exports.register = (server, pluginOptions, next) => {
       path:  url.parse(options.fetchDirectives['report-uri']).pathname,
       method: 'POST'
     };
-    // will need to try this out in browser:
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
-      server.log(['content-security-policy-report'], request.payload);
+      server.log(options.logTags, request.payload);
       reply();
     };
     server.route(routeOptions);
