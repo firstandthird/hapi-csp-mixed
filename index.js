@@ -59,6 +59,7 @@ exports.register = (server, pluginOptions, next) => {
       server.log(['content-security-policy-report'], request.payload);
       reply();
     };
+    server.route(routeOptions);
   }
   next();
 };
