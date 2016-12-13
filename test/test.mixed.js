@@ -137,3 +137,32 @@ lab.test('should over-ride fetch directives and policies ', (allDone) => {
     }
   }, allDone);
 });
+
+lab.test('should provide a route at route-url ', (allDone) => {
+  async.autoInject({
+    register: (done) => {
+      server.register({
+        register: hapiCSP,
+        options: {
+          varietiesToInclude: ['plain'],
+          fetchDirectives: {
+            // this directive tells the browser where to POST the error report:
+            'report-uri': 'http://localhost:8080/report'
+          }
+        }
+      }, done);
+    },
+    inject: (register, done) => {
+      server.inject({
+        url: '/report',
+        method: 'POST',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    verify: (inject, done) => {
+      code.expect(inject.statusCode).to.equal(200);
+      done();
+    }
+  }, allDone);
+});

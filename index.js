@@ -1,7 +1,7 @@
 'use strict';
 const _ = require('lodash');
 const aug = require('aug');
-
+const url = require('url');
 const pluginDefaults = {
   varietiesToInclude: ['view'],
   fetchDirectives: {
@@ -48,9 +48,9 @@ exports.register = (server, pluginOptions, next) => {
     reply.continue();
   });
   // will set up an endpoint at report-uri if you want:
-  if (options['report-uri']) {
+  if (options.fetchDirectives['report-uri']) {
     const routeOptions = {
-      uri: options['report-uri'],
+      path:  url.parse(options.fetchDirectives['report-uri']).pathname,
       method: 'POST'
     };
     // will need to try this out in browser:
