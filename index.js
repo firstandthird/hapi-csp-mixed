@@ -12,7 +12,7 @@ const pluginDefaults = {
 };
 
 exports.register = (server, pluginOptions, next) => {
-  const options = aug(pluginDefaults, pluginOptions);
+  const options = aug('defaults', pluginDefaults, pluginOptions);
   // policies are single-quoted in CSP headers, urls/etc aren't:
   const quotify = (policy) => {
     if (['none', 'self', 'unsafe-inline', 'unsafe-eval'].indexOf(policy) > -1) {
