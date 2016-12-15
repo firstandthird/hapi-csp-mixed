@@ -21,7 +21,7 @@ lab.afterEach((done) => {
 });
 
 
-lab.test('should add default header to incoming requests of the indicated variety ', (allDone) => {
+lab.test('should add default headers to incoming requests of the indicated variety ', (allDone) => {
   async.autoInject({
     register: (done) => {
       server.register({
@@ -54,6 +54,7 @@ lab.test('should add default header to incoming requests of the indicated variet
       const headers = inject.headers;
       code.expect(headers).to.include('content-security-policy-report-only');
       code.expect(headers['content-security-policy-report-only']).to.equal('default-src https:;report-uri http://localhost/csp_reports');
+      code.expect(headers['content-security-policy']).to.equal('upgrade-insecure-requests;');
       done();
     }
   }, allDone);
