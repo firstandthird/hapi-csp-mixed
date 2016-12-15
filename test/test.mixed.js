@@ -53,7 +53,7 @@ lab.test('should add default headers to incoming requests of the indicated varie
       code.expect(inject.statusCode).to.equal(200);
       const headers = inject.headers;
       code.expect(headers).to.include('content-security-policy-report-only');
-      code.expect(headers['content-security-policy-report-only']).to.equal('default-src https:;report-uri http://localhost/csp_reports');
+      code.expect(headers['content-security-policy-report-only']).to.equal('default-src https: \'unsafe-inline\' \'unsafe-eval\';report-uri /csp_reports');
       code.expect(headers['content-security-policy']).to.equal('upgrade-insecure-requests;');
       done();
     }

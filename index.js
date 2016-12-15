@@ -1,13 +1,12 @@
 'use strict';
-const _ = require('lodash');
 const aug = require('aug');
 const url = require('url');
 const pluginDefaults = {
   logTags: ['content-security-policy-report'],
   varietiesToInclude: ['view'],
   fetchDirectives: {
-    'default-src': ['https:'],
-    'report-uri': 'http://localhost/csp_reports'
+    'default-src': ['https:', 'unsafe-inline', 'unsafe-eval'],
+    'report-uri': '/csp_reports'
   },
   headerKey: 'Content-Security-Policy-Report-Only',
   upgradeInsecureRequests: true
@@ -17,7 +16,7 @@ const policyHeaderKey = 'Content-Security-Policy';
 const policyHeader = 'upgrade-insecure-requests;';
 
 exports.register = (server, pluginOptions, next) => {
-  const options = aug(pluginDefaults, pluginOptions);
+  const options = aug('defaults', pluginDefaults, pluginOptions);
   // policies are single-quoted in CSP headers, urls/etc aren't:
   const quotify = (policy) => {
     if (['none', 'self', 'unsafe-inline', 'unsafe-eval'].indexOf(policy) > -1) {
@@ -28,12 +27,13 @@ exports.register = (server, pluginOptions, next) => {
 
   // stringify the contents of the CSP header
   // eg: default-src https: 'unsafe-inline' 'unsafe-eval'; report-uri https://example.com/reportingEndpoint
-  const cspValue = _.reduce(options.fetchDirectives, (memo, fetchDirectiveValue, fetchDirective) => {
+  const cspValue = Object.keys(options.fetchDirectives).reduce((memo, fetchDirective) => {
+    const fetchDirectiveValue = options.fetchDirectives[fetchDirective];
     // policy could be either a single policy or list of them:
     if (typeof fetchDirectiveValue === 'string') {
       memo.push(`${fetchDirective} ${quotify(fetchDirectiveValue)}`);
     } else {
-      memo.push(`${fetchDirective} ${_.map(fetchDirectiveValue, item => quotify(item)).join(' ')}`);
+      memo.push(`${fetchDirective} ${fetchDirectiveValue.map(item => quotify(item)).join(' ')}`);
     }
     return memo;
   }, []).join(';');
