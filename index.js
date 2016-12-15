@@ -7,7 +7,7 @@ const pluginDefaults = {
   varietiesToInclude: ['view'],
   fetchDirectives: {
     'default-src': ['https:'],
-    'report-uri': 'http://localhost/csp_reports'
+    'report-uri': '/csp_reports'
   },
   headerKey: 'Content-Security-Policy-Report-Only'
 };
