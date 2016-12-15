@@ -6,7 +6,7 @@ const pluginDefaults = {
   logTags: ['content-security-policy-report'],
   varietiesToInclude: ['view'],
   fetchDirectives: {
-    'default-src': ['https:'],
+    'default-src': ['https:', 'unsafe-inline', 'unsafe-eval'],
     'report-uri': 'http://localhost/csp_reports'
   },
   headerKey: 'Content-Security-Policy-Report-Only'
