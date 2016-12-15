@@ -10,9 +10,11 @@ const pluginDefaults = {
     'report-uri': 'http://localhost/csp_reports'
   },
   headerKey: 'Content-Security-Policy-Report-Only',
-  policyHeaderKey: 'Content-Security-Policy',
-  policyHeader: 'upgrade-insecure-requests;'
+  upgradeInsecureRequests: true
 };
+
+const policyHeaderKey = 'Content-Security-Policy';
+const policyHeader = 'upgrade-insecure-requests;';
 
 exports.register = (server, pluginOptions, next) => {
   const options = aug(pluginDefaults, pluginOptions);
@@ -49,10 +51,14 @@ exports.register = (server, pluginOptions, next) => {
     const response = request.response;
     if (request.response.isBoom) {
       response.output.headers[options.headerKey] = cspValue;
-      response.output.headers[options.policyHeaderKey] = options.policyHeader;
+      if (options.upgradeInsecureRequests) {
+        response.output.headers[policyHeaderKey] = policyHeader;
+      }
     } else {
       response.header(options.headerKey, cspValue);
-      response.header(options.policyHeaderKey, options.policyHeader);
+      if (options.upgradeInsecureRequests) {
+        response.header(policyHeaderKey, policyHeader);
+      }
     }
     reply.continue();
   });
