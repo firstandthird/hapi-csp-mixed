@@ -8,12 +8,15 @@ const pluginDefaults = {
     'default-src': ['https:', 'unsafe-inline', 'unsafe-eval'],
     'report-uri': '/csp_reports'
   },
-  headerKey: 'Content-Security-Policy-Report-Only',
+  // by default the browser will POST any error reports to report-uri, set this to false to skip that:
+  reportErrors: true,
+  // by default the browser will turn http requests into https requests, set this to false to prevent that:
   upgradeInsecureRequests: true
 };
 
 const policyHeaderKey = 'Content-Security-Policy';
 const policyHeader = 'upgrade-insecure-requests;';
+const headerKey = 'Content-Security-Policy-Report-Only';
 
 exports.register = (server, pluginOptions, next) => {
   const options = aug('defaults', pluginDefaults, pluginOptions);
@@ -49,13 +52,15 @@ exports.register = (server, pluginOptions, next) => {
       return reply.continue();
     }
     const response = request.response;
-    if (request.response.isBoom) {
-      response.output.headers[options.headerKey] = cspValue;
+    if (request.response.isBoom && options.reportErrors) {
+      response.output.headers[headerKey] = cspValue;
       if (options.upgradeInsecureRequests) {
         response.output.headers[policyHeaderKey] = policyHeader;
       }
     } else {
-      response.header(options.headerKey, cspValue);
+      if (options.reportErrors) {
+        response.header(headerKey, cspValue);
+      }
       if (options.upgradeInsecureRequests) {
         response.header(policyHeaderKey, policyHeader);
       }

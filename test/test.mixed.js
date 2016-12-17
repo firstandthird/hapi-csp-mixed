@@ -168,3 +168,78 @@ lab.test('should provide a route at route-url ', (allDone) => {
     }
   }, allDone);
 });
+
+lab.test('suppress report header if reportErrors is false ', (allDone) => {
+  async.autoInject({
+    register: (done) => {
+      server.register({
+        register: hapiCSP,
+        options: {
+          reportErrors: false
+        },
+      }, done);
+    },
+    routes: (register, done) => {
+      server.route({
+        path: '/test',
+        method: 'GET',
+        handler: (request, reply) => {
+          reply('good');
+        }
+      });
+      done();
+    },
+    inject: (routes, done) => {
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    verify: (inject, done) => {
+      code.expect(inject.statusCode).to.equal(200);
+      const headers = inject.headers;
+      code.expect(headers).to.not.include('content-security-policy-report-only');
+      done();
+    }
+  }, allDone);
+});
+
+
+lab.test('suppress https upgrade header if upgradeInsecureRequests is false ', (allDone) => {
+  async.autoInject({
+    register: (done) => {
+      server.register({
+        register: hapiCSP,
+        options: {
+          upgradeInsecureRequests: false
+        },
+      }, done);
+    },
+    routes: (register, done) => {
+      server.route({
+        path: '/test',
+        method: 'GET',
+        handler: (request, reply) => {
+          reply('good');
+        }
+      });
+      done();
+    },
+    inject: (routes, done) => {
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    verify: (inject, done) => {
+      code.expect(inject.statusCode).to.equal(200);
+      const headers = inject.headers;
+      code.expect(headers).to.not.include('content-security-policy');
+      done();
+    }
+  }, allDone);
+});
