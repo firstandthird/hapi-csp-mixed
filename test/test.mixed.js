@@ -21,7 +21,7 @@ lab.afterEach((done) => {
 });
 
 
-lab.test('should add default header to incoming requests of the indicated variety ', (allDone) => {
+lab.test('should add default headers to incoming requests of the indicated variety ', (allDone) => {
   async.autoInject({
     register: (done) => {
       server.register({
@@ -54,6 +54,7 @@ lab.test('should add default header to incoming requests of the indicated variet
       const headers = inject.headers;
       code.expect(headers).to.include('content-security-policy-report-only');
       code.expect(headers['content-security-policy-report-only']).to.equal('default-src https: \'unsafe-inline\' \'unsafe-eval\';report-uri /csp_reports');
+      code.expect(headers['content-security-policy']).to.equal('upgrade-insecure-requests;');
       done();
     }
   }, allDone);
@@ -163,6 +164,81 @@ lab.test('should provide a route at route-url ', (allDone) => {
     },
     verify: (inject, done) => {
       code.expect(inject.statusCode).to.equal(200);
+      done();
+    }
+  }, allDone);
+});
+
+lab.test('suppress report header if reportErrors is false ', (allDone) => {
+  async.autoInject({
+    register: (done) => {
+      server.register({
+        register: hapiCSP,
+        options: {
+          reportErrors: false
+        },
+      }, done);
+    },
+    routes: (register, done) => {
+      server.route({
+        path: '/test',
+        method: 'GET',
+        handler: (request, reply) => {
+          reply('good');
+        }
+      });
+      done();
+    },
+    inject: (routes, done) => {
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    verify: (inject, done) => {
+      code.expect(inject.statusCode).to.equal(200);
+      const headers = inject.headers;
+      code.expect(headers).to.not.include('content-security-policy-report-only');
+      done();
+    }
+  }, allDone);
+});
+
+
+lab.test('suppress https upgrade header if upgradeInsecureRequests is false ', (allDone) => {
+  async.autoInject({
+    register: (done) => {
+      server.register({
+        register: hapiCSP,
+        options: {
+          upgradeInsecureRequests: false
+        },
+      }, done);
+    },
+    routes: (register, done) => {
+      server.route({
+        path: '/test',
+        method: 'GET',
+        handler: (request, reply) => {
+          reply('good');
+        }
+      });
+      done();
+    },
+    inject: (routes, done) => {
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    verify: (inject, done) => {
+      code.expect(inject.statusCode).to.equal(200);
+      const headers = inject.headers;
+      code.expect(headers).to.not.include('content-security-policy');
       done();
     }
   }, allDone);
