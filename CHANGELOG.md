@@ -1,4 +1,9 @@
 
+2.0.1 / 2016-12-19
+==================
+
+  * allow various browser formats for report-uri route
+
 2.0.0 / 2016-12-19
 ==================
 
