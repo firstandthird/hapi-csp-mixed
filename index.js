@@ -75,7 +75,7 @@ exports.register = (server, pluginOptions, next) => {
       config: {
         payload: {
           parse: false,
-          allow: ['application/csp-report']
+          allow: ['application/csp-report', 'text/html', 'application/json']
         }
       }
     };
