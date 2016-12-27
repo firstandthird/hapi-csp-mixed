@@ -70,7 +70,7 @@ exports.register = (server, pluginOptions, next) => {
   // will set up an endpoint at report-uri if you want:
   if (options.fetchDirectives['report-uri']) {
     const routeOptions = {
-      path:  url.parse(options.fetchDirectives['report-uri']).pathname,
+      path: url.parse(options.fetchDirectives['report-uri']).pathname,
       method: '*',
       config: {
         payload: {
@@ -81,7 +81,9 @@ exports.register = (server, pluginOptions, next) => {
     };
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
       // the report will be a Buffer representing a JSON string:
-      server.log(options.logTags, request.payload.toString('utf-8'));
+      if (request.payload) {
+        server.log(options.logTags, request.payload.toString('utf-8'));
+      }
       reply();
     };
     server.route(routeOptions);
