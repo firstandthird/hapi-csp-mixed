@@ -1,4 +1,10 @@
 
+2.0.2 / 2016-12-30
+==================
+
+  * ensure payload exists
+  * chore(package): update dependencies
+
 2.0.1 / 2016-12-19
 ==================
 
