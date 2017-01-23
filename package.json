@@ -31,6 +31,6 @@
     "extends": "firstandthird"
   },
   "dependencies": {
-    "aug": "^1.0.1"
+    "aug": "^1.0.2"
   }
 }
