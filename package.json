@@ -25,7 +25,7 @@
     "eslint-config-firstandthird": "^3.0.2",
     "eslint-plugin-import": "^2.1.0",
     "hapi": "^16.0.2",
-    "lab": "^11.2.1"
+    "lab": "^12.1.0"
   },
   "eslintConfig": {
     "extends": "firstandthird"
