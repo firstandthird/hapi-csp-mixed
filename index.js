@@ -2,7 +2,8 @@
 const aug = require('aug');
 const url = require('url');
 const pluginDefaults = {
-  logTags: ['content-security-policy-report'],
+  httpsOnly: false, // only respond if request is https
+  logTags: ['content-security-policy-report', 'warning'],
   varietiesToInclude: ['view'],
   fetchDirectives: {
     'default-src': ['https:', 'unsafe-inline', 'unsafe-eval'],
@@ -19,7 +20,7 @@ const policyHeader = 'upgrade-insecure-requests;';
 const headerKey = 'Content-Security-Policy-Report-Only';
 
 exports.register = (server, pluginOptions, next) => {
-  const options = aug('defaults', pluginDefaults, pluginOptions);
+  const options = aug(pluginDefaults, pluginOptions);
   // policies are single-quoted in CSP headers, urls/etc aren't:
   const quotify = (policy) => {
     if (['none', 'self', 'unsafe-inline', 'unsafe-eval'].indexOf(policy) > -1) {
@@ -35,7 +36,7 @@ exports.register = (server, pluginOptions, next) => {
     // policy could be either a single policy or list of them:
     if (typeof fetchDirectiveValue === 'string') {
       memo.push(`${fetchDirective} ${quotify(fetchDirectiveValue)}`);
-    } else {
+    } else if (fetchDirectiveValue.length !== 0) {
       memo.push(`${fetchDirective} ${fetchDirectiveValue.map(item => quotify(item)).join(' ')}`);
     }
     return memo;
@@ -43,13 +44,20 @@ exports.register = (server, pluginOptions, next) => {
 
   // calculates and adds the CSP header for each request before it returns
   server.ext('onPreResponse', (request, reply) => {
+    // don't worry about it if we are only doing https routes and this isn't:
+    if (options.httpsOnly && request.server.info.protocol !== 'https') {
+      return reply.continue();
+    }
     // don't worry about it if this was called by the CSP report route:
     if (options.fetchDirectives['report-uri'] === request.path) {
       return reply.continue();
     }
-    // don't worry about it if this response variety isn't in the indicated varieties:
+    // don't worry about it if this response variety isn't in the indicated varieties
+    // and the route config is not explicitly set to add csp headers:
     if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
-      return reply.continue();
+      if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
+        return reply.continue();
+      }
     }
     const response = request.response;
     if (request.response.isBoom && options.reportErrors) {
@@ -82,7 +90,11 @@ exports.register = (server, pluginOptions, next) => {
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
       // the report will be a Buffer representing a JSON string:
       if (request.payload) {
-        server.log(options.logTags, request.payload.toString('utf-8'));
+        try {
+          server.log(options.logTags, JSON.parse(request.payload.toString()));
+        } catch (e) {
+          server.log(options.logTags, {});
+        }
       }
       reply();
     };
