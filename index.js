@@ -56,8 +56,11 @@ exports.register = (server, pluginOptions, next) => {
       }
     }
     // don't worry about it if we are only doing https routes and this isn't https:
-    if (options.httpsOnly && request.headers['x-forwarded-proto'] !== 'https') {
-      return reply.continue();
+    if (options.httpsOnly && request.server.info.protocol !== 'https') {
+      // proxied routes send a header specifying the protocol:
+      if (request.headers['x-forwarded-proto'] !== 'https') {
+        return reply.continue();
+      }
     }
     const response = request.response;
     if (request.response.isBoom && options.reportErrors) {
