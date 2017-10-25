@@ -44,21 +44,20 @@ exports.register = (server, pluginOptions, next) => {
 
   // calculates and adds the CSP header for each request before it returns
   server.ext('onPreResponse', (request, reply) => {
-    // unless the cspHeader option is set for this route, check if we still need to intercept the response:
+    // don't worry about it if this was called by the CSP report route:
+    if (options.fetchDirectives['report-uri'] === request.path) {
+      return reply.continue();
+    }
+    // unless the cspHeader option is set for this route,
+    // don't worry about it if this response variety isn't in the indicated varieties
     if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
-      // don't worry about it if we are only doing https routes and this isn't https:
-      if (options.httpsOnly && request.server.info.protocol !== 'https') {
-        return reply.continue();
-      }
-      // don't worry about it if this was called by the CSP report route:
-      if (options.fetchDirectives['report-uri'] === request.path) {
-        return reply.continue();
-      }
-      // don't worry about it if this response variety isn't in the indicated varieties
-      // and the route config is not explicitly set to add csp headers:
       if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
         return reply.continue();
       }
+    }
+    // don't worry about it if we are only doing https routes and this isn't https:
+    if (options.httpsOnly && request.server.info.protocol !== 'https') {
+      return reply.continue();
     }
     const response = request.response;
     if (request.response.isBoom && options.reportErrors) {
@@ -91,12 +90,13 @@ exports.register = (server, pluginOptions, next) => {
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
       // the report will be a Buffer representing a JSON string:
       if (request.payload) {
+        let payload;
         try {
-          server.log(options.logTags, JSON.parse(request.payload.toString()));
+          payload = JSON.parse(request.payload.toString());
         } catch (e) {
-          // log error if unable to parse json payload:
-          server.log(e);
+          payload = request.payload.toString();
         }
+        server.log(options.logTags, payload);
       }
       reply();
     };

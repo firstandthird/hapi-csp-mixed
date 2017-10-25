@@ -333,3 +333,60 @@ lab.test('suppress https upgrade header if upgradeInsecureRequests is false ', (
     }
   }, allDone);
 });
+
+lab.test('httpsOnly option will prevent non-http requests', (allDone) => {
+  async.autoInject({
+    register: (done) => {
+      server.register({
+        register: hapiCSP,
+        options: {
+          httpsOnly: true,
+          varietiesToInclude: ['plain']
+        }
+      }, done);
+    },
+    routes: (register, done) => {
+      server.route({
+        path: '/test',
+        method: 'GET',
+        handler: (request, reply) => {
+          reply('good');
+        }
+      });
+      done();
+    },
+    inject1: (routes, done) => {
+      server.info.protocol = 'https';
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    inject2: (inject1, done) => {
+      server.info.protocol = 'http';
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+    verify: (inject1, inject2, done) => {
+      code.expect(inject1.statusCode).to.equal(200);
+      const headers1 = inject1.headers;
+      code.expect(headers1).to.include('content-security-policy-report-only');
+      code.expect(headers1['content-security-policy-report-only']).to.equal('default-src https: \'unsafe-inline\' \'unsafe-eval\';report-uri /csp_reports');
+      code.expect(headers1['content-security-policy']).to.equal('upgrade-insecure-requests;');
+
+      code.expect(inject2.statusCode).to.equal(200);
+      const headers2 = inject2.headers;
+      code.expect(headers2).to.not.include('content-security-policy-report-only');
+      code.expect(headers2['content-security-policy-report-only']).to.not.equal('default-src https: \'unsafe-inline\' \'unsafe-eval\';report-uri /csp_reports');
+      code.expect(headers2['content-security-policy']).to.not.equal('upgrade-insecure-requests;');
+
+      done();
+    }
+  }, allDone);
+});
