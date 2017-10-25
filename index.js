@@ -44,18 +44,19 @@ exports.register = (server, pluginOptions, next) => {
 
   // calculates and adds the CSP header for each request before it returns
   server.ext('onPreResponse', (request, reply) => {
-    // don't worry about it if we are only doing https routes and this isn't:
-    if (options.httpsOnly && request.server.info.protocol !== 'https') {
-      return reply.continue();
-    }
-    // don't worry about it if this was called by the CSP report route:
-    if (options.fetchDirectives['report-uri'] === request.path) {
-      return reply.continue();
-    }
-    // don't worry about it if this response variety isn't in the indicated varieties
-    // and the route config is not explicitly set to add csp headers:
-    if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
-      if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
+    // unless the cspHeader option is set for this route, check if we still need to intercept the response:
+    if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
+      // don't worry about it if we are only doing https routes and this isn't https:
+      if (options.httpsOnly && request.server.info.protocol !== 'https') {
+        return reply.continue();
+      }
+      // don't worry about it if this was called by the CSP report route:
+      if (options.fetchDirectives['report-uri'] === request.path) {
+        return reply.continue();
+      }
+      // don't worry about it if this response variety isn't in the indicated varieties
+      // and the route config is not explicitly set to add csp headers:
+      if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
         return reply.continue();
       }
     }
