@@ -56,7 +56,7 @@ exports.register = (server, pluginOptions, next) => {
       }
     }
     // don't worry about it if we are only doing https routes and this isn't https:
-    if (options.httpsOnly && request.server.info.protocol !== 'https') {
+    if (options.httpsOnly && request.headers['x-forwarded-proto'] !== 'https') {
       return reply.continue();
     }
     const response = request.response;

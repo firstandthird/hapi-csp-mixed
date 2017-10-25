@@ -356,19 +356,23 @@ lab.test('httpsOnly option will prevent non-http requests', (allDone) => {
       done();
     },
     inject1: (routes, done) => {
-      server.info.protocol = 'https';
       server.inject({
         url: '/test',
         method: 'GET',
+        headers: {
+          'x-forwarded-proto': 'https'
+        }
       }, (injectResponse) => {
         done(null, injectResponse);
       });
     },
     inject2: (inject1, done) => {
-      server.info.protocol = 'http';
       server.inject({
         url: '/test',
         method: 'GET',
+        headers: {
+          'x-forwarded-proto': 'http'
+        }
       }, (injectResponse) => {
         done(null, injectResponse);
       });
