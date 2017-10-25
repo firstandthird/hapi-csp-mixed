@@ -94,7 +94,8 @@ exports.register = (server, pluginOptions, next) => {
         try {
           server.log(options.logTags, JSON.parse(request.payload.toString()));
         } catch (e) {
-          server.log(options.logTags, {});
+          // log error if unable to parse json payload:
+          server.log(e);
         }
       }
       reply();
