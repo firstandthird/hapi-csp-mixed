@@ -2,7 +2,8 @@
 const aug = require('aug');
 const url = require('url');
 const pluginDefaults = {
-  logTags: ['content-security-policy-report'],
+  httpsOnly: false, // only respond if request is https
+  logTags: ['content-security-policy-report', 'warning'],
   varietiesToInclude: ['view'],
   fetchDirectives: {
     'default-src': ['https:', 'unsafe-inline', 'unsafe-eval'],
@@ -19,7 +20,7 @@ const policyHeader = 'upgrade-insecure-requests;';
 const headerKey = 'Content-Security-Policy-Report-Only';
 
 exports.register = (server, pluginOptions, next) => {
-  const options = aug('defaults', pluginDefaults, pluginOptions);
+  const options = aug(pluginDefaults, pluginOptions);
   // policies are single-quoted in CSP headers, urls/etc aren't:
   const quotify = (policy) => {
     if (['none', 'self', 'unsafe-inline', 'unsafe-eval'].indexOf(policy) > -1) {
@@ -32,10 +33,10 @@ exports.register = (server, pluginOptions, next) => {
   // eg: default-src https: 'unsafe-inline' 'unsafe-eval'; report-uri https://example.com/reportingEndpoint
   const cspValue = Object.keys(options.fetchDirectives).reduce((memo, fetchDirective) => {
     const fetchDirectiveValue = options.fetchDirectives[fetchDirective];
-    // policy could be either a single policy or list of them:
+    // policy could be either a single policy or list of one or more of them:
     if (typeof fetchDirectiveValue === 'string') {
       memo.push(`${fetchDirective} ${quotify(fetchDirectiveValue)}`);
-    } else {
+    } else if (fetchDirectiveValue.length !== 0) {
       memo.push(`${fetchDirective} ${fetchDirectiveValue.map(item => quotify(item)).join(' ')}`);
     }
     return memo;
@@ -47,8 +48,15 @@ exports.register = (server, pluginOptions, next) => {
     if (options.fetchDirectives['report-uri'] === request.path) {
       return reply.continue();
     }
-    // don't worry about it if this response variety isn't in the indicated varieties:
-    if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
+    // unless the cspHeader option is set for this route,
+    // don't worry about it if this response variety isn't in the indicated varieties
+    if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
+      if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
+        return reply.continue();
+      }
+    }
+    // don't worry about it if we are only doing https routes and this isn't https:
+    if (options.httpsOnly && request.server.info.protocol !== 'https') {
       return reply.continue();
     }
     const response = request.response;
@@ -82,7 +90,13 @@ exports.register = (server, pluginOptions, next) => {
     routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
       // the report will be a Buffer representing a JSON string:
       if (request.payload) {
-        server.log(options.logTags, request.payload.toString('utf-8'));
+        let payload;
+        try {
+          payload = JSON.parse(request.payload.toString());
+        } catch (e) {
+          payload = request.payload.toString();
+        }
+        server.log(options.logTags, payload);
       }
       reply();
     };

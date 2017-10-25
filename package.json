@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "lab -e test"
+    "test": "lab -e test --leaks"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,6 @@
     "extends": "firstandthird"
   },
   "dependencies": {
-    "aug": "^1.0.1"
+    "aug": "^2.0.0"
   }
 }
