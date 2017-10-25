@@ -33,7 +33,7 @@ exports.register = (server, pluginOptions, next) => {
   // eg: default-src https: 'unsafe-inline' 'unsafe-eval'; report-uri https://example.com/reportingEndpoint
   const cspValue = Object.keys(options.fetchDirectives).reduce((memo, fetchDirective) => {
     const fetchDirectiveValue = options.fetchDirectives[fetchDirective];
-    // policy could be either a single policy or list of them:
+    // policy could be either a single policy or list of one or more of them:
     if (typeof fetchDirectiveValue === 'string') {
       memo.push(`${fetchDirective} ${quotify(fetchDirectiveValue)}`);
     } else if (fetchDirectiveValue.length !== 0) {

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "lab -e test"
+    "test": "lab -e test --leaks"
   },
   "repository": {
     "type": "git",

@@ -113,11 +113,12 @@ lab.test('will still add header if specified by the route config ', (allDone) =>
         config: {
           plugins: {
             'hapi-csp-mixed': {
-              cspHeaders: true
+              cspHeaders: true // setting this to true forces CSP headers on
             }
           }
         },
         handler: (request, reply) => {
+          // does not use 'view' but does have the cspHeaders option:
           reply('good');
         }
       });
