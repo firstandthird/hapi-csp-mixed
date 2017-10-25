@@ -434,7 +434,16 @@ lab.test('httpsOnly option will recognize proxy requests that are https', (allDo
         done(null, injectResponse);
       });
     },
-    verify: (inject1, inject2, done) => {
+    inject3: (inject2, done) => {
+      server.inject({
+        url: '/test',
+        method: 'GET',
+      }, (injectResponse) => {
+        done(null, injectResponse);
+      });
+    },
+
+    verify: (inject1, inject2, inject3, done) => {
       code.expect(inject1.statusCode).to.equal(200);
       const headers1 = inject1.headers;
       code.expect(headers1).to.include('content-security-policy-report-only');
@@ -446,6 +455,12 @@ lab.test('httpsOnly option will recognize proxy requests that are https', (allDo
       code.expect(headers2).to.not.include('content-security-policy-report-only');
       code.expect(headers2['content-security-policy-report-only']).to.not.equal('default-src https: \'unsafe-inline\' \'unsafe-eval\';report-uri /csp_reports');
       code.expect(headers2['content-security-policy']).to.not.equal('upgrade-insecure-requests;');
+
+      code.expect(inject3.statusCode).to.equal(200);
+      const headers3 = inject3.headers;
+      code.expect(headers3).to.not.include('content-security-policy-report-only');
+      code.expect(headers3['content-security-policy-report-only']).to.not.equal('default-src https: \'unsafe-inline\' \'unsafe-eval\';report-uri /csp_reports');
+      code.expect(headers3['content-security-policy']).to.not.equal('upgrade-insecure-requests;');
 
       done();
     }
