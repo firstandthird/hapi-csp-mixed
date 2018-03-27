@@ -52,7 +52,7 @@ const register = (server, pluginOptions) => {
     if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
       const response = h.response();
       if (!options.varietiesToInclude.includes(response.variety)) {
-        return response;
+        return h.continue;
       }
     }
     // don't worry about it if we are only doing https routes and this isn't https:
