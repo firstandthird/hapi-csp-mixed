@@ -19,13 +19,12 @@
   },
   "homepage": "https://github.com/firstandthird/hapi-csp-mixed#readme",
   "devDependencies": {
-    "async": "^2.1.4",
-    "code": "^4.0.0",
-    "eslint": "^3.9.1",
-    "eslint-config-firstandthird": "^3.0.2",
-    "eslint-plugin-import": "^2.1.0",
-    "hapi": "^16.0.2",
-    "lab": "^11.2.1"
+    "code": "^5.2.0",
+    "eslint": "^4.19.1",
+    "eslint-config-firstandthird": "^4.3.0",
+    "eslint-plugin-import": "^2.9.0",
+    "hapi": "^17.2.3",
+    "lab": "^15.4.1"
   },
   "eslintConfig": {
     "extends": "firstandthird"

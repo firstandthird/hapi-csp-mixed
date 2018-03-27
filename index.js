@@ -1,4 +1,3 @@
-'use strict';
 const aug = require('aug');
 const url = require('url');
 const pluginDefaults = {
@@ -19,7 +18,7 @@ const policyHeaderKey = 'Content-Security-Policy';
 const policyHeader = 'upgrade-insecure-requests;';
 const headerKey = 'Content-Security-Policy-Report-Only';
 
-exports.register = (server, pluginOptions, next) => {
+const register = (server, pluginOptions) => {
   const options = aug(pluginDefaults, pluginOptions);
   // policies are single-quoted in CSP headers, urls/etc aren't:
   const quotify = (policy) => {
@@ -43,23 +42,23 @@ exports.register = (server, pluginOptions, next) => {
   }, []).join(';');
 
   // calculates and adds the CSP header for each request before it returns
-  server.ext('onPreResponse', (request, reply) => {
+  server.ext('onPreResponse', (request, h) => {
     // don't worry about it if this was called by the CSP report route:
     if (options.fetchDirectives['report-uri'] === request.path) {
-      return reply.continue();
+      return h.continue;
     }
     // unless the cspHeader option is set for this route,
     // don't worry about it if this response variety isn't in the indicated varieties
     if (!request.route.settings.plugins['hapi-csp-mixed'] || !request.route.settings.plugins['hapi-csp-mixed'].cspHeaders) {
       if (options.varietiesToInclude.indexOf(request.response.variety) < 0) {
-        return reply.continue();
+        return h.continue;
       }
     }
     // don't worry about it if we are only doing https routes and this isn't https:
     if (options.httpsOnly && request.server.info.protocol !== 'https') {
       // proxied routes send a header specifying the protocol:
       if (request.headers['x-forwarded-proto'] !== 'https') {
-        return reply.continue();
+        return h.continue;
       }
     }
     const response = request.response;
@@ -76,7 +75,7 @@ exports.register = (server, pluginOptions, next) => {
         response.header(policyHeaderKey, policyHeader);
       }
     }
-    reply.continue();
+    return h.continue;
   });
   // will set up an endpoint at report-uri if you want:
   if (options.fetchDirectives['report-uri']) {
@@ -90,7 +89,7 @@ exports.register = (server, pluginOptions, next) => {
         }
       }
     };
-    routeOptions.handler = options.routeHandler ? options.routeHandler : (request, reply) => {
+    routeOptions.handler = options.routeHandler ? options.routeHandler : (request, h) => {
       // the report will be a Buffer representing a JSON string:
       if (request.payload) {
         let payload;
@@ -101,12 +100,14 @@ exports.register = (server, pluginOptions, next) => {
         }
         server.log(options.logTags, payload);
       }
-      reply();
     };
     server.route(routeOptions);
   }
-  next();
 };
-exports.register.attributes = {
+
+exports.plugin = {
+  register,
+  name: 'hapi-csp-mixed',
+  once: true,
   pkg: require('./package.json')
 };
